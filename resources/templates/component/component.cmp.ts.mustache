@@ -1,0 +1,11 @@
+import {ChangeDetectionStrategy, Component} from '@angular/core';
+import './{{ componentName }}.less';
+
+@Component({
+    selector: '{{ componentName }}',
+    templateUrl: '{{ componentName }}.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
+})
+
+export class {{ componentName }}Component {
+}
