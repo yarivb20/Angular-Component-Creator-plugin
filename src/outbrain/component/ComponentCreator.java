@@ -28,8 +28,11 @@ public class ComponentCreator extends AbstractCreator {
             return;
         }
 
+        templateModel.put("componentNameCamel", setCamelCase(componentName));
+
         VirtualFile componentDirectory = directory.createChildDirectory(directory, componentName);
         setStylePath(new File(componentDirectory.getCanonicalPath()));
+
 
         FileUtils utils = new FileUtils();
         TemplateRenderer renderer = new TemplateRenderer();
@@ -40,13 +43,17 @@ public class ComponentCreator extends AbstractCreator {
 
     }
 
+    private String setCamelCase(String str) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
     private void setStylePath(File filePath) {
         final int drillDownCount = findDir(filePath.getParentFile(), "style", 1);
         String path = "../../style/variables";
         if(drillDownCount != -1) {
             path = "../".repeat(drillDownCount) + "style/variables";
         }
-        templateModel.put("stylePath", path);
+
     }
 
 
