@@ -34,6 +34,8 @@ public class ComponentCreator extends AbstractCreator {
 
         VirtualFile componentDirectory = directory.createChildDirectory(directory, componentName);
         setPaths(componentDirectory.getCanonicalPath());
+        File file = (File) templateModel.get("modelFile");
+        FileUtils.addModuleToModulesFile(file,componentName+"Component");
         TemplateRenderer renderer = new TemplateRenderer();
 
         for (String fileExtension: FILE_EXTENSIONS) {

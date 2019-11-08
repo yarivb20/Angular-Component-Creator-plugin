@@ -2,9 +2,7 @@ package outbrain.util;
 
 import com.intellij.openapi.vfs.VirtualFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -106,5 +104,55 @@ public final class FileUtils {
 
     public static void writeFile(String content, VirtualFile destinationFile) throws IOException {
         destinationFile.setBinaryContent(content.getBytes());
+    }
+
+    public static void addModuleToModulesFile(File moduleFile, String componentName) {
+        List<String> lines = new ArrayList<String>();
+        String line = null;
+        try {
+            boolean inDeclarations = false;
+            boolean added = false;
+            int indentation = -1;
+            FileReader fr = new FileReader(moduleFile);
+            BufferedReader br = new BufferedReader(fr);
+            while ((line = br.readLine()) != null) {
+                if(inDeclarations && indentation == -1){
+                    indentation = 0;
+                    char[] characters = line.toCharArray();
+                    for(int i = 0; i < line.length(); i++){
+                        if(!Character.isWhitespace(characters[i])){
+                            break;
+                        }
+                        indentation++;
+                    }
+                }
+                if(line.contains("declarations")){
+                    inDeclarations = true;
+                }
+                if(inDeclarations && line.contains("]")){
+                    lines.set(lines.size() - 1, lines.get(lines.size() - 1) + ",");
+                    lines.add(" ".repeat(indentation) + componentName);
+                    added = true;
+                    inDeclarations = false;
+                }
+                lines.add(line);
+            }
+            fr.close();
+            br.close();
+
+            if(added){
+                FileWriter fw = new FileWriter(moduleFile);
+                BufferedWriter out = new BufferedWriter(fw);
+                for(String s : lines) {
+                    out.write(s);
+                    out.newLine();
+                }
+                out.flush();
+                out.close();
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 }
