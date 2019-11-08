@@ -1,6 +1,5 @@
-import {ChangeDetectionStrategy, Component, ChangeDetectorRef} from '@angular/core';
+import {ChangeDetectionStrategy, Component} from '@angular/core';
 import './{{ componentName }}.less';
-import {StateComponent} from '{{ stateComponentPath }}'
 
 @Component({
     selector: '{{ componentName }}',
@@ -8,16 +7,5 @@ import {StateComponent} from '{{ stateComponentPath }}'
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 
-export class {{ componentNameCamel }}Component extends StateComponent<I{{ componentNameCamel }}ComponentState> {
-
-    state$$: I{{ componentNameCamel }}ComponentState = {
-    };
-
-    constructor(protected readonly cd: ChangeDetectorRef) {
-        super(cd);
-    }
-}
-
-interface I{{ componentNameCamel }}ComponentState{
-
+export class {{ componentNameCamel }}Component {
 }

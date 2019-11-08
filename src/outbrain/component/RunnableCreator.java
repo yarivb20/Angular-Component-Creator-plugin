@@ -8,8 +8,8 @@ import java.util.Map;
 public class RunnableCreator implements Runnable {
     private ComponentCreator creator;
 
-    public RunnableCreator(VirtualFile directory, String componentName, Map<String, Object> templateModel){
-        creator = new ComponentCreator(directory, componentName, templateModel);
+    public RunnableCreator(VirtualFile directory,  Map<String, Object> templateModel){
+        creator = new ComponentCreator(directory, templateModel);
     }
 
     @Override

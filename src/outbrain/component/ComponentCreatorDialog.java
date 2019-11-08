@@ -10,6 +10,8 @@ public class ComponentCreatorDialog extends JDialog {
     private JButton buttonOK;
     private JButton buttonCancel;
     private JTextField componentNameTextField;
+    private JComboBox<String> modulesComboBox1;
+    private JCheckBox stateCheckBox;
 
     private boolean hasCanceled = false;
 
@@ -49,12 +51,28 @@ public class ComponentCreatorDialog extends JDialog {
 
     public Map<String, Object> getTemplateVars() {
         Map<String, Object> templateModel = new HashMap<String, Object>();
-        templateModel.put("componentName", componentNameTextField.getText());
+        templateModel.put("componentName", getComponentName());
+        templateModel.put("modelFile", getSelectedModelFile());
+        templateModel.put("state", getState());
         return templateModel;
+    }
+
+    public void setModelFilesList(String[] items) {
+        for(String item: items){
+            modulesComboBox1.addItem(item);
+        }
     }
 
     public String getComponentName() {
         return componentNameTextField.getText();
+    }
+
+    public String getSelectedModelFile() {
+        return String.valueOf(modulesComboBox1.getSelectedItem());
+    }
+
+    public boolean getState() {
+        return stateCheckBox.isSelected();
     }
 
     public boolean isCanceled() {
@@ -71,4 +89,7 @@ public class ComponentCreatorDialog extends JDialog {
         dispose();
     }
 
+    private void createUIComponents() {
+        // TODO: place custom component creation code here
+    }
 }

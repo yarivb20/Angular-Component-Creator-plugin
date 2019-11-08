@@ -7,8 +7,7 @@ import java.util.Map;
 
 public class TemplateRenderer {
     public String render(String file, Map<String, Object> context) {
-        FileUtils utils = new FileUtils();
-        Template tmpl = Mustache.compiler().compile(utils.getContent(file));
+        Template tmpl = Mustache.compiler().compile(FileUtils.getContent(file));
         return tmpl.execute(context);
     }
 }

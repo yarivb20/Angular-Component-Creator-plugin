@@ -43,7 +43,7 @@ public class ComponentCreatorAction extends AbstractCreatorAction {
         }
 
         ApplicationManager.getApplication().runWriteAction(
-                new RunnableCreator(targetLocation, componentName, dialog.getTemplateVars())
+                new RunnableCreator(targetLocation, dialog.getTemplateVars())
         );
     }
 }
