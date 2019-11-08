@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
 import outbrain.util.AbstractCreatorAction;
+import outbrain.util.FileUtils;
 
 import java.awt.*;
 
@@ -25,6 +26,7 @@ public class ComponentCreatorAction extends AbstractCreatorAction {
         ComponentCreatorDialog dialog = new ComponentCreatorDialog();
         VirtualFile selectedLocation = e.getData(CommonDataKeys.VIRTUAL_FILE);
         VirtualFile targetLocation = getLocation(selectedLocation);
+        dialog.setModelFilesList(FileUtils.getModuleFilesList(targetLocation.getCanonicalPath(), "src/app/"));
 
         final int width = dialog.getWidth();
         final int height = dialog.getHeight();

@@ -2,7 +2,9 @@ package outbrain.component;
 
 import javax.swing.*;
 import java.awt.event.*;
+import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ComponentCreatorDialog extends JDialog {
@@ -14,6 +16,7 @@ public class ComponentCreatorDialog extends JDialog {
     private JCheckBox stateCheckBox;
 
     private boolean hasCanceled = false;
+    private List<File> files;
 
     public ComponentCreatorDialog() {
         setContentPane(contentPane);
@@ -57,9 +60,10 @@ public class ComponentCreatorDialog extends JDialog {
         return templateModel;
     }
 
-    public void setModelFilesList(String[] items) {
-        for(String item: items){
-            modulesComboBox1.addItem(item);
+    public void setModelFilesList(List<File> files) {
+        this.files = files;
+        for(File file: files){
+            modulesComboBox1.addItem(file.getName());
         }
     }
 
@@ -67,8 +71,8 @@ public class ComponentCreatorDialog extends JDialog {
         return componentNameTextField.getText();
     }
 
-    public String getSelectedModelFile() {
-        return String.valueOf(modulesComboBox1.getSelectedItem());
+    public File getSelectedModelFile() {
+        return this.files.get(modulesComboBox1.getSelectedIndex());
     }
 
     public boolean getState() {

@@ -5,6 +5,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public final class FileUtils {
@@ -35,6 +37,29 @@ public final class FileUtils {
         return "../".repeat(drillDownCount) + destFolder;
     }
 
+    public static List<File> getModuleFilesList(String filePath, final String destFolder) {
+        File file = new File(filePath).getParentFile();
+        String[] paths = destFolder.split("/");
+        int numberOfDrillDown = findDir(file, destFolder.split("/"), 1);
+        File newFile;
+        do{
+            newFile = file.getParentFile();
+            --numberOfDrillDown;
+        }
+        while(numberOfDrillDown >= 0);
+        for (String path: paths) {
+            File[] files = newFile.listFiles();
+            for (File f : files)
+            {
+                if(f.isDirectory() && f.getName().equals(path))
+                {
+                    newFile = f;
+                }
+            }
+        }
+        return findModuleFile(newFile);
+    }
+
     private static int findDir(File filePath, String[] paths, int drillDownCount)//drill down to find the path
     {
         if(filePath == null) {
@@ -46,8 +71,10 @@ public final class FileUtils {
             if(f.isDirectory() && f.getName().equals(paths[0]))
             {
                 String path = String.join("/", paths);
-                if(checkPath(f, path.substring(path.indexOf('/')+1)))
+                if(checkPath(f, path.substring(path.indexOf('/')+1))) {
+                    filePath = f;
                     return drillDownCount;
+                }
                 else
                     continue;
             }
@@ -64,6 +91,17 @@ public final class FileUtils {
             }
         }
         return false;
+    }
+
+    private static List<File> findModuleFile(File currentPath){
+        File[] childFiles = currentPath.listFiles();
+        List<File> moduleFiles = new ArrayList<File>();
+        for (File f : childFiles) {
+            if (!f.isDirectory() && f.getName().contains("module")) {
+                moduleFiles.add(f);
+            }
+        }
+        return moduleFiles;
     }
 
     public static void writeFile(String content, VirtualFile destinationFile) throws IOException {
