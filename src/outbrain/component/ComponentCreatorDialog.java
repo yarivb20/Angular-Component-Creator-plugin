@@ -60,10 +60,9 @@ public class ComponentCreatorDialog extends JDialog {
         return templateModel;
     }
 
-    public void setModelFilesList(List<File> files) {
-        this.files = files;
-        for(File file: files){
-            modulesComboBox1.addItem(file.getName());
+    public void setModelFilesList(String[] files) {
+        for(String file: files){
+            modulesComboBox1.addItem(file);
         }
     }
 

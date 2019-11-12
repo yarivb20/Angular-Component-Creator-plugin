@@ -35,7 +35,7 @@ public class ComponentCreator extends AbstractCreator {
         VirtualFile componentDirectory = directory.createChildDirectory(directory, componentName);
         setPaths(componentDirectory.getCanonicalPath());
         File file = (File) templateModel.get("modelFile");
-        FileUtils.addModuleToModulesFile(file,componentName+"Component");
+        FileUtils.addModuleToModulesFile(file,componentName+"Component", componentDirectory.getCanonicalPath());
         TemplateRenderer renderer = new TemplateRenderer();
 
         for (String fileExtension: FILE_EXTENSIONS) {
@@ -48,9 +48,13 @@ public class ComponentCreator extends AbstractCreator {
     }
 
     private void setPaths(String filePath){
-        templateModel.put("stylePath", FileUtils.findFilePath(filePath, "style/variables", 2));
-        if(this.withState)
-            templateModel.put("stateComponentPath", FileUtils.findFilePath(filePath, "components/state-component/state-component", 3));
+
+        FileComponent styleFolder = new FileComponent(filePath, "style/variables", 2);
+        templateModel.put("stylePath", styleFolder.getPathToDestFolder());
+        if(this.withState) {
+            FileComponent stateFolder = new FileComponent(filePath, "components/state-component/state-component", 3);
+            templateModel.put("stateComponentPath", stateFolder.getPathToDestFolder());
+        }
     }
 
     private String getFileTemplateName(String fileExtension) {

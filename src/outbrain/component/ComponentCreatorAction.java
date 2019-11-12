@@ -12,7 +12,7 @@ import outbrain.util.FileUtils;
 import java.awt.*;
 
 public class ComponentCreatorAction extends AbstractCreatorAction {
-
+    private final String[] MODULE_FILES = {"app.modules.ng4.ts","reports-shared.module.ts","shared.modules.ts"};
     @Override
     public void update(AnActionEvent anActionEvent) {
         Project project = anActionEvent.getProject();
@@ -26,7 +26,7 @@ public class ComponentCreatorAction extends AbstractCreatorAction {
         ComponentCreatorDialog dialog = new ComponentCreatorDialog();
         VirtualFile selectedLocation = e.getData(CommonDataKeys.VIRTUAL_FILE);
         VirtualFile targetLocation = getLocation(selectedLocation);
-        dialog.setModelFilesList(FileUtils.getModuleFilesList(targetLocation.getCanonicalPath(), "src/app/"));
+        dialog.setModelFilesList(MODULE_FILES);
 
         final int width = dialog.getWidth();
         final int height = dialog.getHeight();

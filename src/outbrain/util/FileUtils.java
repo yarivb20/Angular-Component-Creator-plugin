@@ -1,6 +1,7 @@
 package outbrain.util;
 
 import com.intellij.openapi.vfs.VirtualFile;
+import outbrain.component.FileComponent;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public final class FileUtils {
+
     private FileUtils() {
     }
 
@@ -27,57 +29,56 @@ public final class FileUtils {
         return result.toString();
     }
 
-    public static String findFilePath(String filePath, final String destFolder, final int defaultDrillDownCount) {
-        File file = new File(filePath);
-        int drillDownCount = findDir(file.getParentFile(), destFolder.split("/"), 1);
-        String path = "../../" + destFolder;
-        drillDownCount = drillDownCount != -1 ? drillDownCount : defaultDrillDownCount;
-        return "../".repeat(drillDownCount) + destFolder;
+    public static void findFilePath(FileComponent fileComponent) {
+       findDir(fileComponent.getFile(), fileComponent);
     }
 
-    public static List<File> getModuleFilesList(String filePath, final String destFolder) {
-        File file = new File(filePath).getParentFile();
-        String[] paths = destFolder.split("/");
-        int numberOfDrillDown = findDir(file, destFolder.split("/"), 1);
-        File newFile;
-        do{
-            newFile = file.getParentFile();
-            --numberOfDrillDown;
-        }
-        while(numberOfDrillDown >= 0);
-        for (String path: paths) {
-            File[] files = newFile.listFiles();
-            for (File f : files)
-            {
-                if(f.isDirectory() && f.getName().equals(path))
-                {
-                    newFile = f;
-                }
-            }
-        }
-        return findModuleFile(newFile);
-    }
 
-    private static int findDir(File filePath, String[] paths, int drillDownCount)//drill down to find the path
+//    public static List<File> getModuleFilesList(String filePath, final String destFolder) {
+//        File file = new File(filePath).getParentFile();
+//        String[] paths = destFolder.split("/");
+//        int numberOfDrillDown = findDir(file, destFolder.split("/"), 1);
+//        File newFile;
+//        do{
+//            newFile = file.getParentFile();
+//            --numberOfDrillDown;
+//        }
+//        while(numberOfDrillDown >= 0);
+//        for (String path: paths) {
+//            File[] files = newFile.listFiles();
+//            for (File f : files)
+//            {
+//                if(f.isDirectory() && f.getName().equals(path))
+//                {
+//                    newFile = f;
+//                }
+//            }
+//        }
+//        return findModuleFile(newFile);
+//    }
+
+    private static void findDir(File filePath, FileComponent fileComponent)//drill down to find the path
     {
         if(filePath == null) {
-            return -1;
+            fileComponent.setDestPaths(true, null);
+            return;
         }
         File[] files = filePath.listFiles();
         for (File f : files)
         {
-            if(f.isDirectory() && f.getName().equals(paths[0]))
+            if(f.isDirectory() && f.getName().equals(fileComponent.getPaths()[0]))
             {
-                String path = String.join("/", paths);
+                String path = String.join("/", fileComponent.getPaths());
                 if(checkPath(f, path.substring(path.indexOf('/')+1))) {
-                    filePath = f;
-                    return drillDownCount;
+                    fileComponent.setDestPaths(false, f.getParentFile().getName());
+                    return;
                 }
                 else
                     continue;
             }
         }
-        return findDir(filePath.getParentFile(), paths, ++drillDownCount);
+        fileComponent.incDrillDownCount();
+        findDir(filePath.getParentFile(), fileComponent);
     }
 
     private static boolean checkPath(File currentPath, String path){//check if a relative path exists in the path
@@ -106,36 +107,35 @@ public final class FileUtils {
         destinationFile.setBinaryContent(content.getBytes());
     }
 
-    public static void addModuleToModulesFile(File moduleFile, String componentName) {
+    public static void addModuleToModulesFile(File moduleFile, String componentName, String componentPath) {
         List<String> lines = new ArrayList<String>();
         String line = null;
         try {
+            boolean inImports = false;
             boolean inDeclarations = false;
             boolean added = false;
-            int indentation = -1;
+            String prevLine = "";
             FileReader fr = new FileReader(moduleFile);
             BufferedReader br = new BufferedReader(fr);
             while ((line = br.readLine()) != null) {
-                if(inDeclarations && indentation == -1){
-                    indentation = 0;
-                    char[] characters = line.toCharArray();
-                    for(int i = 0; i < line.length(); i++){
-                        if(!Character.isWhitespace(characters[i])){
-                            break;
-                        }
-                        indentation++;
-                    }
+                if(inDeclarations && line.contains("]")){
+                    lines.set(lines.size() - 1, lines.get(lines.size() - 1) + ",");
+                    lines.add(" ".repeat(getIndentation(prevLine)) + componentName);
+                    added = true;
+                    inDeclarations = false;
+                }else if(inImports && line.trim().isEmpty()){
+                    lines.add("import {" + componentName + "} from '" + componentPath + "';");
+                    inImports = false;
                 }
                 if(line.contains("declarations")){
                     inDeclarations = true;
                 }
-                if(inDeclarations && line.contains("]")){
-                    lines.set(lines.size() - 1, lines.get(lines.size() - 1) + ",");
-                    lines.add(" ".repeat(indentation) + componentName);
-                    added = true;
-                    inDeclarations = false;
+                else if(line.startsWith("import")){
+                    inImports = true;
                 }
+                prevLine = line;
                 lines.add(line);
+
             }
             fr.close();
             br.close();
@@ -154,5 +154,17 @@ public final class FileUtils {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    private static int getIndentation(String line) {
+        int indentation = 0;
+        char[] characters = line.toCharArray();
+        for(int i = 0; i < line.length(); i++){
+            if(!Character.isWhitespace(characters[i])){
+                break;
+            }
+            indentation++;
+        }
+        return indentation;
     }
 }
