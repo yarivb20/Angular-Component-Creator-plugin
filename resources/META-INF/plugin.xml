@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.outbrain.angular</id>
   <name>Angular Component Creator</name>
-  <version>1.1</version>
+  <version>1.2</version>
   <vendor email="ybrosh@outbrain.com">Outbrain</vendor>
 
   <description><![CDATA[
