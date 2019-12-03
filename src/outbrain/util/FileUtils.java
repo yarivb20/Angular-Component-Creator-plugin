@@ -7,6 +7,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class FileUtils {
 
@@ -33,34 +35,17 @@ public final class FileUtils {
        findDir(fileComponent.getFile(), fileComponent);
     }
 
-
-//    public static List<File> getModuleFilesList(String filePath, final String destFolder) {
-//        File file = new File(filePath).getParentFile();
-//        String[] paths = destFolder.split("/");
-//        int numberOfDrillDown = findDir(file, destFolder.split("/"), 1);
-//        File newFile;
-//        do{
-//            newFile = file.getParentFile();
-//            --numberOfDrillDown;
-//        }
-//        while(numberOfDrillDown >= 0);
-//        for (String path: paths) {
-//            File[] files = newFile.listFiles();
-//            for (File f : files)
-//            {
-//                if(f.isDirectory() && f.getName().equals(path))
-//                {
-//                    newFile = f;
-//                }
-//            }
-//        }
-//        return findModuleFile(newFile);
-//    }
+    public static FileComponent getModuleFilesFolder(String filePath, final String destFolder) {
+        FileComponent fileComponent = new FileComponent(filePath, destFolder, 2);
+        findDir(fileComponent.getFile(), fileComponent);
+        fileComponent.selectFiles(fileComponent.getDestFolderFile(), "module");
+        return fileComponent;
+    }
 
     private static void findDir(File filePath, FileComponent fileComponent)//drill down to find the path
     {
         if(filePath == null) {
-            fileComponent.setDestPaths(true, null);
+            fileComponent.setDestPaths(true, null, null);
             return;
         }
         File[] files = filePath.listFiles();
@@ -69,8 +54,9 @@ public final class FileUtils {
             if(f.isDirectory() && f.getName().equals(fileComponent.getPaths()[0]))
             {
                 String path = String.join("/", fileComponent.getPaths());
-                if(checkPath(f, path.substring(path.indexOf('/')+1))) {
-                    fileComponent.setDestPaths(false, f.getParentFile().getName());
+                File fullPath = checkPath(f, path.substring(path.indexOf('/')+1));
+                if(fullPath != null) {
+                    fileComponent.setDestPaths(false, f.getParentFile().getName(), fullPath);
                     return;
                 }
                 else
@@ -81,33 +67,23 @@ public final class FileUtils {
         findDir(filePath.getParentFile(), fileComponent);
     }
 
-    private static boolean checkPath(File currentPath, String path){//check if a relative path exists in the path
+    private static File checkPath(File currentPath, String path){//check if a relative path exists in the path
         String[] paths = path.split("/");
         File[] childFiles = currentPath.listFiles();
         for (File f : childFiles) {
-            if (f.isDirectory() && f.getName().equals(paths[0])) {
-                return paths.length <= 1 || checkPath(f, path.substring(path.indexOf('/')+1));
+            if (f.getName().equals(paths[0])) {
+                return paths.length <= 1 ? FileUtils.removeFileExtension(f)  : checkPath(f, path.substring(path.indexOf('/')+1));
             }
         }
-        return false;
-    }
-
-    private static List<File> findModuleFile(File currentPath){
-        File[] childFiles = currentPath.listFiles();
-        List<File> moduleFiles = new ArrayList<File>();
-        for (File f : childFiles) {
-            if (!f.isDirectory() && f.getName().contains("module")) {
-                moduleFiles.add(f);
-            }
-        }
-        return moduleFiles;
+        return null;
     }
 
     public static void writeFile(String content, VirtualFile destinationFile) throws IOException {
         destinationFile.setBinaryContent(content.getBytes());
     }
 
-    public static void addModuleToModulesFile(File moduleFile, String componentName, String componentPath) {
+    public static void addModuleToModulesFile(FileComponent modelFolder, String componentName, boolean isEntryComponent) {
+        String componentNameCamel = FileUtils.setCamelCase(componentName+"Component");
         List<String> lines = new ArrayList<String>();
         String line = null;
         try {
@@ -115,19 +91,20 @@ public final class FileUtils {
             boolean inDeclarations = false;
             boolean added = false;
             String prevLine = "";
-            FileReader fr = new FileReader(moduleFile);
+            FileReader fr = new FileReader(modelFolder.getSelectedFile());
             BufferedReader br = new BufferedReader(fr);
             while ((line = br.readLine()) != null) {
                 if(inDeclarations && line.contains("]")){
                     lines.set(lines.size() - 1, lines.get(lines.size() - 1) + ",");
-                    lines.add(" ".repeat(getIndentation(prevLine)) + componentName);
+                    lines.add(" ".repeat(getLineIndentation(prevLine)) + componentNameCamel);
                     added = true;
                     inDeclarations = false;
                 }else if(inImports && line.trim().isEmpty()){
-                    lines.add("import {" + componentName + "} from '" + componentPath + "';");
+                    String path = modelFolder.getPathFromDestFolder() + "/" + componentName + "/" + componentName + ".cmp";
+                    lines.add("import {" + componentNameCamel + "} from '" + path + "';");
                     inImports = false;
                 }
-                if(line.contains("declarations")){
+                if(line.contains("declarations") || isEntryComponent && line.contains("entryComponents")){
                     inDeclarations = true;
                 }
                 else if(line.startsWith("import")){
@@ -141,7 +118,7 @@ public final class FileUtils {
             br.close();
 
             if(added){
-                FileWriter fw = new FileWriter(moduleFile);
+                FileWriter fw = new FileWriter(modelFolder.getSelectedFile());
                 BufferedWriter out = new BufferedWriter(fw);
                 for(String s : lines) {
                     out.write(s);
@@ -156,7 +133,31 @@ public final class FileUtils {
         }
     }
 
-    private static int getIndentation(String line) {
+    private static File removeFileExtension(File file){
+        String path = file.getPath();
+        if(path.indexOf(".less") != -1)
+            path = path.substring(0, path.indexOf(".less"));
+        else if(path.indexOf(".ts") != -1)
+            path = path.substring(0, path.indexOf(".ts"));
+        return new File(path);
+    }
+
+    public static String removeFileExtension(String path){
+        if(path.indexOf(".less") != -1)
+            path = path.substring(0, path.indexOf(".less"));
+        else if(path.indexOf(".ts") != -1)
+            path = path.substring(0, path.indexOf(".ts"));
+        return path;
+    }
+
+    public static String setCamelCase(String str) {
+        String[] strArray = str.split("[_-]");
+        return Stream.of(strArray)
+                .map(s -> s.substring(0, 1).toUpperCase() + s.substring(1))
+                .collect(Collectors.joining(""));
+    }
+
+    private static int getLineIndentation(String line) {
         int indentation = 0;
         char[] characters = line.toCharArray();
         for(int i = 0; i < line.length(); i++){

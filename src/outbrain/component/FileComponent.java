@@ -9,39 +9,42 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FileComponent {
+    private static ArrayList<File> selectedFileList;
+    private static File selectedFile;
     private final File file;
-    private final String destFolder;
+    private final String destFolderRelativePath;
+    private File destFolderFile;
     private final String[] paths;
     private String pathToDestFolder;
     private String pathFromDestFolder;
     private final int defaultDrillDownCount;
-    private int drillDownCount = 1;
+    private int drillDownCount = 0;
 
-    public FileComponent(final File file, final String destFolder, final int defaultDrillDownCount) {
-        this.file = file;
-        this.destFolder = destFolder;
-        paths = destFolder.split("/");
-        this.defaultDrillDownCount = defaultDrillDownCount;
-        FileUtils.findFilePath(this);
+    public String getComponentName() {
+        return componentName;
     }
+
+    private String componentName;
+
     public FileComponent(final String filePath, final String destFolder, final int defaultDrillDownCount) {
         this.file = new File(filePath);
-        this.destFolder = destFolder;
+        componentName = file.getName();
+        this.destFolderRelativePath = destFolder;
         paths = destFolder.split("/");
         this.defaultDrillDownCount = defaultDrillDownCount;
         FileUtils.findFilePath(this);
     }
 
-    public File getFile() {
-        return file;
-    }
+    public File getFile() { return file; }
+
+    public File getDestFolderFile() { return destFolderFile; }
 
     public String[] getPaths() {
         return paths;
     }
 
-    public String getDestFolder() {
-        return destFolder;
+    public String getDestFolderRelativePath() {
+        return destFolderRelativePath;
     }
 
     public String getPathToDestFolder() {
@@ -55,13 +58,15 @@ public class FileComponent {
     public String getPathFromDestFolder() {
         return pathFromDestFolder;
     }
+
     public int getDrillDownCount() {
         return drillDownCount;
     }
 
-    public void setDestPaths(boolean setFromDefault, String destFolderParent) {
+    public void setDestPaths(boolean setFromDefault, String destFolderParent, File destFolder) {
         drillDownCount =  setFromDefault ? defaultDrillDownCount : drillDownCount;
-        setPathToDestFolder("../".repeat(drillDownCount) + destFolder);
+        setPathToDestFolder("../".repeat(drillDownCount) + FileUtils.removeFileExtension(destFolderRelativePath));
+        this.destFolderFile = destFolder;
         setPathFromDestFolder(destFolderParent);
     }
 
@@ -82,6 +87,29 @@ public class FileComponent {
                 .map(f -> f.getName())
                 .collect(Collectors.joining("/", pathFromDestFolder,""));
     }
+
+    public static ArrayList<File> getSelectedFileList() {
+        return selectedFileList;
+    }
+
+    public static void selectFile(int idx) {
+        FileComponent.selectedFile = selectedFileList.get(idx);
+    }
+
+    public static File getSelectedFile() {
+        return FileComponent.selectedFile;
+    }
+
+    public static List<File> selectFiles(File folder, String fileSearchString){
+        selectedFileList = new ArrayList<File>();
+        for (File f : folder.listFiles()) {
+            if (!f.isDirectory() && f.getName().contains(fileSearchString)) {
+                selectedFileList.add(f);
+            }
+        }
+        return selectedFileList;
+    }
+
 
     public void incDrillDownCount() {
         ++drillDownCount;

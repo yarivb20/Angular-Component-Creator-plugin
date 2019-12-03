@@ -14,6 +14,8 @@ public class ComponentCreatorDialog extends JDialog {
     private JTextField componentNameTextField;
     private JComboBox<String> modulesComboBox1;
     private JCheckBox stateCheckBox;
+    private JCheckBox entryComponentCheckBox;
+    private FileComponent modulesFolder;
 
     private boolean hasCanceled = false;
     private List<File> files;
@@ -53,16 +55,24 @@ public class ComponentCreatorDialog extends JDialog {
     }
 
     public Map<String, Object> getTemplateVars() {
+        getSelectedModelsFolder();
         Map<String, Object> templateModel = new HashMap<String, Object>();
         templateModel.put("componentName", getComponentName());
-        templateModel.put("modelFile", getSelectedModelFile());
+        templateModel.put("modelFilesFolder", modulesFolder);
         templateModel.put("state", getState());
+        templateModel.put("entryComponent", getEntryComponent());
         return templateModel;
     }
 
-    public void setModelFilesList(String[] files) {
-        for(String file: files){
-            modulesComboBox1.addItem(file);
+    public void setModelFilesFolder(FileComponent modulesFolder) {
+        this.modulesFolder = modulesFolder;
+        setModelFilesList();
+    }
+
+
+    private void setModelFilesList() {
+        for(File file: modulesFolder.getSelectedFileList()){
+            modulesComboBox1.addItem(file.getName());
         }
     }
 
@@ -70,12 +80,17 @@ public class ComponentCreatorDialog extends JDialog {
         return componentNameTextField.getText();
     }
 
-    public File getSelectedModelFile() {
-        return this.files.get(modulesComboBox1.getSelectedIndex());
+    public File getSelectedModelsFolder() {
+        modulesFolder.selectFile(modulesComboBox1.getSelectedIndex());
+        return (modulesFolder.getSelectedFile());
     }
 
     public boolean getState() {
         return stateCheckBox.isSelected();
+    }
+
+    public boolean getEntryComponent() {
+        return entryComponentCheckBox.isSelected();
     }
 
     public boolean isCanceled() {

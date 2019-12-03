@@ -8,6 +8,8 @@ import outbrain.util.TemplateRenderer;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ComponentCreator extends AbstractCreator {
     private VirtualFile directory;
@@ -30,12 +32,13 @@ public class ComponentCreator extends AbstractCreator {
             return;
         }
 
-        templateModel.put("componentNameCamel", setCamelCase(componentName));
+        templateModel.put("componentNameCamel", FileUtils.setCamelCase(componentName));
 
         VirtualFile componentDirectory = directory.createChildDirectory(directory, componentName);
         setPaths(componentDirectory.getCanonicalPath());
-        File file = (File) templateModel.get("modelFile");
-        FileUtils.addModuleToModulesFile(file,componentName+"Component", componentDirectory.getCanonicalPath());
+        FileComponent modelFolder = (FileComponent) templateModel.get("modelFilesFolder");
+        boolean isEntryComponent = Boolean.TRUE.equals(this.templateModel.get("entryComponent"));
+        FileUtils.addModuleToModulesFile(modelFolder,componentName, isEntryComponent);
         TemplateRenderer renderer = new TemplateRenderer();
 
         for (String fileExtension: FILE_EXTENSIONS) {
@@ -43,16 +46,12 @@ public class ComponentCreator extends AbstractCreator {
         }
     }
 
-    private String setCamelCase(String str) {
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
-    }
-
     private void setPaths(String filePath){
 
-        FileComponent styleFolder = new FileComponent(filePath, "style/variables", 2);
+        FileComponent styleFolder = new FileComponent(filePath, "style/variables.less", 2);
         templateModel.put("stylePath", styleFolder.getPathToDestFolder());
         if(this.withState) {
-            FileComponent stateFolder = new FileComponent(filePath, "components/state-component/state-component", 3);
+            FileComponent stateFolder = new FileComponent(filePath, "components/state-component/state-component.ts", 3);
             templateModel.put("stateComponentPath", stateFolder.getPathToDestFolder());
         }
     }
